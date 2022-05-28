@@ -1,28 +1,51 @@
 import os
 
-import discord
+from discord.ext import commands
 from dotenv import load_dotenv
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
+bot = commands.Bot(command_prefix="?")
 
-client = discord.Client()
+questions = {
+    "how old are you?": "Not even a month.",
+    "what are you?": "I'm a bot.",
+    "tell me a yoke": """Helvetica and Times New Roman walk into a bar.
+    “Get out of here!” shouts the bartender. “We don’t serve your type.”"""
+}
 
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+    print(f"{bot.user} has connected to Discord!")
 
 
-@client.event
+@bot.command()
+async def moyai(ctx):
+    await ctx.send(":moyai:")
+
+
+@bot.command()
+async def ask(ctx, *question):
+    question = " ".join(question)
+    print(question, questions.keys())
+    if question in questions.keys():
+        await ctx.send(questions[question])
+    else:
+        await ctx.send("I'm sorry. I didn't understand. :sob:")
+
+
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
 
-    if message.content.endswith('.'):
-        response = 'celnie.'
+    if message.content.endswith("."):
+        response = "celnie."
         await message.channel.send(response)
-        return
+
+    await bot.process_commands(message)
 
 
-client.run(TOKEN)
+if __name__ == "__main__":
+    load_dotenv()
+    TOKEN = os.getenv("DISCORD_TOKEN")
+    bot.run(TOKEN)
