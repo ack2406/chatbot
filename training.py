@@ -1,5 +1,9 @@
 import nltk, random, json, pickle
 # nltk.download('punkt');nltk.download('wordnet')
+from keras import Sequential
+from keras.applications.densenet import layers
+from keras.layers import Dense, Dropout
+from keras.optimizers import SGD
 from nltk.stem import WordNetLemmatizer
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -8,7 +12,6 @@ import tensorflow
 
 class Training:
     def __init__(self):
-        self.classes = None
         self.documents = None
         self.tags = None
         self.pattern = None
@@ -18,8 +21,7 @@ class Training:
         self.intents = json.loads(data_file)['intents']
         # Slice, categorize and sort data to form we will need
         self.select_data()
-
-        self.train_data()
+        self.create_model()
 
     def select_data(self):
         # Make lists of elements we will want to use, such as patterns which are input or tags which are category
@@ -35,6 +37,7 @@ class Training:
         self.words = list(map(nltk.stem.WordNetLemmatizer().lemmatize, self.words))
         # Sort lists that were provided to this point
         self.words = sorted(list(set(self.words)))
+        # Create and save model and data for later usage
         self.tags = sorted(list(set(self.tags)))
 
     def train_data(self):
@@ -60,10 +63,46 @@ class Training:
         # Shuffle the output, so it is possible to change input data
         random.shuffle(training)
         training = np.array(training, dtype=object)
-        train_x = list(training[:, 0])  # sentences
-        train_y = list(training[:, 1])  # tags
+        sentences_output = list(training[:, 0])
+        tags_output = list(training[:, 1])
 
-        return train_x, train_y
+        return sentences_output, tags_output
+
+    def create_model(self):
+        sentences_input, tags_input = self.train_data()
+        # 3-layered model with dropouts at 0.5 to avoid overfitting
+        model = tensorflow.keras.Sequential(
+            [
+                # RELU - if  x>0 ret x else ret 0
+                layers.Dense(128, input_shape=(len(sentences_input[0]),), activation="relu", name="input_layer"),
+                layers.Dropout(0.5),
+                layers.Dense(64, activation="relu", name="hidden_layer"),
+                layers.Dropout(0.5),
+                # SOFTMAX - Return vector of probabilities that sum to 1
+                layers.Dense(len(tags_input[0]), activation='softmax'),
+            ]
+        )
+        # Decay = learning rate decay over each update
+        # Nesterov momentum prevents us from going too fast and overshooting the optima
+        # it lets us searching for it slower and more precisely
+        # Momentum accelerates gradient descent in the relevant direction
+        # Learning rate states for time to adapt to problem
+        # the lower learning rate requires more epochs
+        sgd = SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        # Metrics stands for our goal of evaluation
+        # We set prepared optimizer
+        # Loss function is set to categorical_crossentropy and measures the performance of the classification model
+        # it is used to minimize the loss in our model
+        model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+        # Batch_size stands for number of samples per gradient update
+        # Epoch is number of iterations for this model
+        # Verbose used for now 1 - progress bar, 2 - one line per iteration, 0 - silent
+        # The other two are input data and target data
+        result_model = model.fit(np.array(sentences_input), np.array(tags_input), epochs=200, batch_size=10, verbose=1)
+        # Save model and data that will be useful for prediction
+        model.save('data/model.h5', result_model)
+        pickle.dump({'words': self.words, 'tags': self.tags, 'sentences_input': sentences_input,
+                     'tags_input': tags_input}, open("data/training_data", "wb"))
 
 
 train = Training()
