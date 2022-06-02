@@ -1,10 +1,10 @@
-import nltk, random, json, pickle
+import nltk
+import random
+import json
+import pickle
 # nltk.download('punkt');nltk.download('wordnet')
-from keras import Sequential
 from keras.applications.densenet import layers
-from keras.layers import Dense, Dropout
 from keras.optimizers import SGD
-from nltk.stem import WordNetLemmatizer
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 import tensorflow
@@ -41,7 +41,8 @@ class Training:
         self.tags = sorted(list(set(self.tags)))
 
     def train_data(self):
-        cv = CountVectorizer(tokenizer=lambda txt: txt.split(), analyzer="word", stop_words=None)
+        # Initialize vector that will let us mark splited words as 0 and 1
+        word_vector = CountVectorizer(tokenizer=lambda txt: txt.split())
         training = []
         for doc in self.documents:
             # Lower case and lemmatize the pattern words
@@ -50,7 +51,7 @@ class Training:
             sentences = ' '.join(list(map(nltk.stem.WordNetLemmatizer().lemmatize, sentences)))
 
             # Mark words included in the sentence as 1 int the collection of all words
-            word_vector = cv.fit([' '.join(self.words)]).transform([sentences]).toarray().tolist()[0]
+            word_vector = word_vector.fit([' '.join(self.words)]).transform([sentences]).toarray().tolist()[0]
 
             # Make vector of 0 of the amount of all tags
             mark_tags = [0] * len(self.tags)
