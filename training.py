@@ -42,7 +42,7 @@ class Training:
 
     def train_data(self):
         # Initialize vector that will let us mark splited words as 0 and 1
-        word_vector = CountVectorizer(tokenizer=lambda txt: txt.split())
+        cv = CountVectorizer(tokenizer=lambda txt: txt.split())
         training = []
         for doc in self.documents:
             # Lower case and lemmatize the pattern words
@@ -51,7 +51,7 @@ class Training:
             sentences = ' '.join(list(map(nltk.stem.WordNetLemmatizer().lemmatize, sentences)))
 
             # Mark words included in the sentence as 1 int the collection of all words
-            word_vector = word_vector.fit([' '.join(self.words)]).transform([sentences]).toarray().tolist()[0]
+            word_vector = cv.fit([' '.join(self.words)]).transform([sentences]).toarray().tolist()[0]
 
             # Make vector of 0 of the amount of all tags
             mark_tags = [0] * len(self.tags)
