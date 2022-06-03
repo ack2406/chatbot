@@ -1,16 +1,34 @@
 import os
+import json
+import random
+import time
+import requests
+
+import tester
 
 from discord.ext import commands
 from dotenv import load_dotenv
 
 bot = commands.Bot(command_prefix="?")
 
-questions = {
-    "how old are you?": "Not even a month.",
-    "what are you?": "I'm a bot.",
-    "tell me a yoke": """Helvetica and Times New Roman walk into a bar.
-    “Get out of here!” shouts the bartender. “We don’t serve your type.”"""
-}
+data_file = open('data/intents.json').read()
+intents = json.loads(data_file)['intents']
+tags = {x['tag']: x['responses'] for x in intents}
+
+tst = tester.Tester()
+
+
+def get_date():
+    return time.strftime("Today is %d.%m.%Y")
+
+
+def get_hour():
+    return time.strftime("It is %H:%M:%S")
+
+
+def get_joke():
+    data = requests.get("https://api.chucknorris.io/jokes/random")
+    return data.json()['value']
 
 
 @bot.event
@@ -19,16 +37,19 @@ async def on_ready():
 
 
 @bot.command()
-async def moyai(ctx):
-    await ctx.send(":moyai:")
-
-
-@bot.command()
-async def ask(ctx, *question):
+async def talk(ctx, *question):
     question = " ".join(question)
-    print(question, questions.keys())
-    if question in questions.keys():
-        await ctx.send(questions[question])
+    tag = tst.classify(question)
+    if tag:
+        if tag == "hour":
+            answer = get_hour()
+        elif tag == "date":
+            answer = get_date()
+        elif tag == "joke":
+            answer = get_joke()
+        else:
+            answer = random.choice(tags[tag])
+        await ctx.send(answer)
     else:
         await ctx.send("I'm sorry. I didn't understand. :sob:")
 
