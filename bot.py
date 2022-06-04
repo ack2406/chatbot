@@ -11,13 +11,17 @@ from dotenv import load_dotenv
 
 bot = commands.Bot(command_prefix="?")
 
+# creating list of possible responses
 data_file = open('data/intents.json').read()
 intents = json.loads(data_file)['intents']
 tags = {x['tag']: x['responses'] for x in intents}
 
+
+# enabling ai classifier
 tst = tester.Tester()
 
 
+# functions for responses
 def get_date():
     return time.strftime("Today is %d.%m.%Y")
 
@@ -31,11 +35,13 @@ def get_joke():
     return data.json()['value']
 
 
+# information about enabling discord bot
 @bot.event
 async def on_ready():
     print(f"{bot.user} has connected to Discord!")
 
 
+# take question and responds to it
 @bot.command()
 async def talk(ctx, *question):
     question = " ".join(question)
@@ -54,12 +60,13 @@ async def talk(ctx, *question):
         await ctx.send("I'm sorry. I didn't understand. :sob:")
 
 
+# listening to messages if ends with dot.
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.endswith("."):
+    if message.content.endswith(".") and not message.content.startswith("?"):
         response = "celnie."
         await message.channel.send(response)
 
