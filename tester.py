@@ -17,7 +17,7 @@ class Tester:
 
     def provide_word_vector(self, sentence):
         # Initialize vector which will be returned
-        word_vector = CountVectorizer(tokenizer=lambda txt: txt.split())
+        cv = CountVectorizer(tokenizer=lambda txt: txt.split())
         # Tokenize, lemmatize and clear from symbols that doesn't matter provided sentence
         sentence_words = nltk.tokenize.word_tokenize(sentence.lower())
         sentence_words = list(map(nltk.stem.WordNetLemmatizer().lemmatize, sentence_words))
@@ -26,7 +26,7 @@ class Tester:
         sentence_words = ' '.join(sentence_words)
         words = ' '.join(self.words)
         # It marks as 0 and 1 words that were used in the sentence
-        word_vector = word_vector.fit([words]).transform([sentence_words]).toarray().tolist()[0]
+        word_vector = cv.fit([words]).transform([sentence_words]).toarray().tolist()[0]
         return np.array(word_vector)
 
     def classify(self, sentence):
