@@ -106,4 +106,5 @@ class Training:
                      'tags_input': tags_input}, open("data/training_data", "wb"))
 
 
-train = Training()
+if __name__ == "__main__":
+    train = Training()

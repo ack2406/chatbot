@@ -3,7 +3,6 @@ import json
 import nltk
 
 import training
-import tester
 
 
 class Retrain:
@@ -12,7 +11,6 @@ class Retrain:
         self.sets_of_words = None
         self.intents = None
         self.pattern = None
-
 
     def on_train(self):
         sentence = input("Write sentence: ")
@@ -57,8 +55,7 @@ class Retrain:
                     print(file_data)
                     json_file.seek(0)
                     json.dump(file_data, json_file, indent=1)
-                    train = training.Training()
-                    train.create_model()
+                training.Training()
                 break
             counter = counter + 1
         # If we didn't match any of the existing tags with the provided one
@@ -68,6 +65,7 @@ class Retrain:
             response = list(map(str.lower, response))
             response = list(filter(lambda x: x not in list("!@#$%^&*?"), response))
             response = list(map(nltk.stem.WordNetLemmatizer().lemmatize, response))
+            response = "".join(response)
             with open('data/intents.json', 'r+') as json_file:
                 file_data = json.load(json_file)
                 file_data['intents'].append({
@@ -77,8 +75,7 @@ class Retrain:
                 })
                 json_file.seek(0)
                 json.dump(file_data, json_file, indent=1)
-                train = training.Training()
-                train.create_model()
+            training.Training()
         print("Trained Successfully")
 
     # Clear provided sentence, that is tokenize, lowerize, lemmatize it and remove certain characters
@@ -89,3 +86,8 @@ class Retrain:
         sentence_words = list(filter(lambda x: x not in list("!@#$%^&*?"), sentence_words))
         sentence_words = ' '.join(sentence_words)
         return sentence_words
+
+
+retrainer = Retrain()
+
+retrainer.on_train()

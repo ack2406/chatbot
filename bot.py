@@ -11,11 +11,15 @@ from dotenv import load_dotenv
 
 bot = commands.Bot(command_prefix="?")
 
-# creating list of possible responses
-data_file = open('data/intents.json').read()
-intents = json.loads(data_file)['intents']
-tags = {x['tag']: x['responses'] for x in intents}
 
+# creating list of possible responses
+def load_tags():
+    data_file = open('data/intents.json').read()
+    intents = json.loads(data_file)['intents']
+    return {x['tag']: x['responses'] for x in intents}
+
+
+tags = load_tags()
 
 # enabling ai classifier
 tst = tester.Tester()
@@ -58,6 +62,14 @@ async def talk(ctx, *question):
         await ctx.send(answer)
     else:
         await ctx.send("I'm sorry. I didn't understand. :sob:")
+
+
+@bot.command()
+async def reload(ctx):
+    global tst, tags
+    tst = tester.Tester()
+    tags = load_tags()
+    await ctx.send("Reloaded!")
 
 
 # listening to messages if ends with dot.
